@@ -172,21 +172,19 @@ public class gwsdkwrapper extends CordovaPlugin {
      * 如果是第一次加载 那么初始化设置 第一次加载的判断为 是否存在_appId
      */
     private void init(JSONArray args, CallbackContext callbackContext) throws JSONException {
-        if (_appId == null || _appId.compareToIgnoreCase(args.getString(2)) != 0) {
-            _appId = args.getString(0);
-            XPGWifiSDK.sharedInstance().startWithAppID(context, _appId);
-            if (debug)
-                XPGWifiSDK.sharedInstance().setLogLevel(XPGWifiSDK.XPGWifiLogLevel.XPGWifiLogLevelAll, "dbugLog.log", true);
-            // set listener
-            XPGWifiSDK.sharedInstance().setListener(wifiSDKListener);
-        } else if (_shareInstance == null) {
-            XPGWifiSDK.sharedInstance().setListener(wifiSDKListener);
-            _shareInstance = XPGWifiSDK.sharedInstance();
-
-        }
-        this._productKey = args.getString(1);
-        this.airLinkCallbackContext = callbackContext;
-
+        if (_appId == null) {
+                   _appId = args.getString(0);
+                   XPGWifiSDK.sharedInstance().startWithAppID(context, _appId);
+                   if (debug)
+                       XPGWifiSDK.sharedInstance().setLogLevel(XPGWifiSDK.XPGWifiLogLevel.XPGWifiLogLevelAll, "dbugLog.log", true);
+                   // set listener
+                   XPGWifiSDK.sharedInstance().setListener(wifiSDKListener);
+               } else if (_shareInstance == null) {
+                   XPGWifiSDK.sharedInstance().setListener(wifiSDKListener);
+               }
+               _shareInstance = XPGWifiSDK.sharedInstance();
+               this._productKey = args.getString(1);
+               this.airLinkCallbackContext = callbackContext;
     }
 
     /**
