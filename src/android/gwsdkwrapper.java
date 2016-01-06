@@ -259,9 +259,7 @@ public class gwsdkwrapper extends CordovaPlugin {
      * @param productKey
      */
     private void getDeviceList(String uid, String token, String productKey) {
-        List<String> list = new ArrayList<String>();
-        list.add(productKey);
-        XPGWifiSDK.sharedInstance().getBoundDevices(uid, token, list);
+        XPGWifiSDK.sharedInstance().getBoundDevices(uid, token, productKey);
     }
 
     /**
