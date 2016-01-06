@@ -10,6 +10,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -59,11 +60,40 @@ public class gwsdkwrapper extends CordovaPlugin {
             if (_devicesList == null) return false;
             return _devicesList.size() == deviceList.size();
         }
+        /**
+         * wifi配对的回调,这个回调不保证可以获取到设备的did
+         * 所以我们拿到这个设备的MacAddress,去didDiscovered 等待设备详细的信息反馈,
+         * @param error
+         * @param device
+         */
+        @Override
+        public void didSetDeviceWifi(int error, XPGWifiDevice device) {
+            if (error == XPGWifiErrorCode.XPGWifiError_NONE && device.getMacAddress().length() > 0) {
+                //获取配对到的设备地址,去didDiscovered 等待设备did的信息
+                _currentDeviceMac = device.getMacAddress();
+
+                if (debug) {
+                    Log.e("didSetDevicewifi", device.getMacAddress());
+                    Log.e("didSetDevicewifi", device.getDid());
+                    Log.e("didSetDevicewifi", device.getIPAddress());
+                    Log.e("didSetDevicewifi", device.getProductKey());
+                }
+            }
+            // do nothing...
+            else if (error == XPGWifiErrorCode.XPGWifiError_CONNECT_TIMEOUT) {
+                //超时的回调
+                PluginResult pr = new PluginResult(PluginResult.Status.ERROR, error);
+                airLinkCallbackContext.sendPluginResult(pr);
+            } else {
+                //设备配对有可能返回多次,这里不做处理.
+            }
+        }
+
 
         @Override
         public void didDiscovered(int result, List<XPGWifiDevice> devicesList) {
             if (result == XPGWifiErrorCode.XPGWifiError_NONE && devicesList.size() > 0) {
-                switch (GwsdkStateCode.getCurrentState()){
+                switch (GwsdkStateCode.getCurrentState()) {
                     case GwsdkStateCode.SetWifiCode:
                         for (int i = 0; i < devicesList.size(); i++) {
                             if (debug) {
@@ -103,7 +133,7 @@ public class gwsdkwrapper extends CordovaPlugin {
                             }
                         }
                         break;
-                    case GwsdkStateCode.ControlCode:
+                    case GwsdkStateCode.GetDevcieListCode:
                         if (hasDone(devicesList)) {
                             JSONArray cdvResult = new JSONArray();
                             for (int i = 0; i < devicesList.size(); i++) {
@@ -116,7 +146,7 @@ public class gwsdkwrapper extends CordovaPlugin {
                             _devicesList = devicesList;
                         }
                         break;
-                    case GwsdkStateCode.GetDevcieListCode:
+                    case GwsdkStateCode.ControlCode:
                         _devicesList = devicesList;
                         deviceLogin(_uid, _token, _currentDeviceMac);
                         Log.d(TAG, "deviceLoing()");
@@ -124,35 +154,6 @@ public class gwsdkwrapper extends CordovaPlugin {
                     default:
 
                 }
-            }
-        }
-
-        /**
-         * wifi配对的回调,这个回调不保证可以获取到设备的did
-         * 所以我们拿到这个设备的MacAddress,去didDiscovered 等待设备详细的信息反馈,
-         * @param error
-         * @param device
-         */
-        @Override
-        public void didSetDeviceWifi(int error, XPGWifiDevice device) {
-            if (error == 0 && device.getMacAddress().length() > 0) {
-                //获取配对到的设备地址,去didDiscovered 等待设备did的信息
-                _currentDeviceMac = device.getMacAddress();
-
-                if (debug) {
-                    Log.e("didSetDevicewifi", device.getMacAddress());
-                    Log.e("didSetDevicewifi", device.getDid());
-                    Log.e("didSetDevicewifi", device.getIPAddress());
-                    Log.e("didSetDevicewifi", device.getProductKey());
-                }
-            }
-            // do nothing...
-            else if (error == XPGWifiErrorCode.XPGWifiError_CONNECT_TIMEOUT) {
-                //超时的回调
-                PluginResult pr = new PluginResult(PluginResult.Status.ERROR, error);
-                airLinkCallbackContext.sendPluginResult(pr);
-            } else {
-                //设备配对有可能返回多次,这里不做处理.
             }
         }
 
@@ -172,19 +173,23 @@ public class gwsdkwrapper extends CordovaPlugin {
      * 如果是第一次加载 那么初始化设置 第一次加载的判断为 是否存在_appId
      */
     private void init(JSONArray args, CallbackContext callbackContext) throws JSONException {
+
         if (_appId == null) {
-                   _appId = args.getString(0);
-                   XPGWifiSDK.sharedInstance().startWithAppID(context, _appId);
-                   if (debug)
-                       XPGWifiSDK.sharedInstance().setLogLevel(XPGWifiSDK.XPGWifiLogLevel.XPGWifiLogLevelAll, "dbugLog.log", true);
-                   // set listener
-                   XPGWifiSDK.sharedInstance().setListener(wifiSDKListener);
-               } else if (_shareInstance == null) {
-                   XPGWifiSDK.sharedInstance().setListener(wifiSDKListener);
-               }
-               _shareInstance = XPGWifiSDK.sharedInstance();
-               this._productKey = args.getString(1);
-               this.airLinkCallbackContext = callbackContext;
+            _appId = args.getString(0);
+            XPGWifiSDK.sharedInstance().startWithAppID(context, _appId);
+            if (debug) {
+                XPGWifiSDK.sharedInstance().setLogLevel(XPGWifiSDK.GizLogPrintLevel.GizLogPrintAll, false);
+            }
+            // set listener
+            XPGWifiSDK.sharedInstance().setListener(wifiSDKListener);
+        } else if (XPGWifiSDK.sharedInstance() == null) {
+            XPGWifiSDK.sharedInstance().startWithAppID(context, _appId);
+            XPGWifiSDK.sharedInstance().setListener(wifiSDKListener);
+        }
+
+        this._productKey = args.getString(1);
+        this.airLinkCallbackContext = callbackContext;
+
     }
 
     /**
@@ -199,7 +204,11 @@ public class gwsdkwrapper extends CordovaPlugin {
      */
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
-
+        //销毁内存中的Listener
+        if (action.equals("dealloc")) {
+            this.dealloc();
+            return true;
+        }
         init(args, callbackContext);
         if (action.equals("setDeviceWifi")) {
             GwsdkStateCode.setCurrentState(GwsdkStateCode.SetWifiCode);
@@ -221,10 +230,7 @@ public class gwsdkwrapper extends CordovaPlugin {
             this.getDeviceList(args.getString(2), args.getString(3), args.getString(1));
             return true;
         }
-        if (action.equals("dealloc")) {
-            this.dealloc();
-            return true;
-        }
+
         return false;
     }
 
@@ -239,7 +245,7 @@ public class gwsdkwrapper extends CordovaPlugin {
         if (wifiSSID != null && wifiSSID.length() > 0 && wifiKey != null && wifiKey.length() > 0) {
             airLinkCallbackContext = callbackContext;
             //15.11.24 切换成新接口
-            _shareInstance.setDeviceWifi(wifiSSID, wifiKey, XPGWifiConfigureMode.XPGWifiConfigureModeAirLink, null, 18000, null);
+            XPGWifiSDK.sharedInstance().setDeviceWifi(wifiSSID, wifiKey, XPGWifiConfigureMode.XPGWifiConfigureModeAirLink, null, 18000, null);
         } else {
             callbackContext.error("args is empty or null");
         }
@@ -253,7 +259,9 @@ public class gwsdkwrapper extends CordovaPlugin {
      * @param productKey
      */
     private void getDeviceList(String uid, String token, String productKey) {
-        XPGWifiSDK.sharedInstance().getBoundDevices(uid, token, productKey);
+        List<String> list = new ArrayList<String>();
+        list.add(productKey);
+        XPGWifiSDK.sharedInstance().getBoundDevices(uid, token, list);
     }
 
     /**
@@ -408,9 +416,8 @@ public class gwsdkwrapper extends CordovaPlugin {
 
 
     private void dealloc() {
-        if (_shareInstance != null) {
-            _shareInstance.setListener(null);
-            _shareInstance = null;
+        if (XPGWifiSDK.sharedInstance() != null) {
+            XPGWifiSDK.sharedInstance().setListener(null);
             _currentDeviceMac = null;
         }
     }
