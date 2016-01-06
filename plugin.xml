@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<plugin id="com.heytz.gizwitswrapper" version="0.4.0" xmlns="http://apache.org/cordova/ns/plugins/1.0"
+<plugin id="com.heytz.gizwitswrapper" version="0.4.1" xmlns="http://apache.org/cordova/ns/plugins/1.0"
         xmlns:android="http://schemas.android.com/apk/res/android">
     <name>gwsdkwrapper</name>
     <js-module name="gwsdkwrapper" src="www/gwsdkwrapper.js">
@@ -35,5 +35,6 @@
         <source-file src="libs/libEsptouch_v0.3.3.4_3.jar" target-dir="libs" />
         <source-file src="libs/json-lib-2.4-jdk15.jar" target-dir="libs" />
         <source-file src="libs/XPGWiFiSDK.jar" target-dir="libs" />
+        <source-file src="libs/easylink_only.jar" target-dir="libs" />
     </platform>
 </plugin>
