@@ -10,7 +10,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -18,13 +17,12 @@ import java.util.List;
 /**
  * This class wrapping Gizwits WifiSDK called from JavaScript.
  */
-public class gwsdkwrapper extends CordovaPlugin {
+public class gwsdk extends CordovaPlugin {
 
     private CallbackContext airLinkCallbackContext;
     private Context context;
     private String _appId;
     private String _productKey;              //当前的productkey
-    private XPGWifiSDK _shareInstance;      //当前的XPGWifiSDK
     private String _currentDeviceMac;       //当前配对的设备Mac地址.
     private final String TAG = "==========gwsdkwrapper==============";
     private Boolean debug = true;            //debug 状态
@@ -60,6 +58,7 @@ public class gwsdkwrapper extends CordovaPlugin {
             if (_devicesList == null) return false;
             return _devicesList.size() == deviceList.size();
         }
+
         /**
          * wifi配对的回调,这个回调不保证可以获取到设备的did
          * 所以我们拿到这个设备的MacAddress,去didDiscovered 等待设备详细的信息反馈,
@@ -177,9 +176,6 @@ public class gwsdkwrapper extends CordovaPlugin {
         if (_appId == null) {
             _appId = args.getString(0);
             XPGWifiSDK.sharedInstance().startWithAppID(context, _appId);
-            if (debug) {
-            //    XPGWifiSDK.sharedInstance().setLogLevel(XPGWifiSDK.GizLogPrintLevel.GizLogPrintAll, false);
-            }
             // set listener
             XPGWifiSDK.sharedInstance().setListener(wifiSDKListener);
         } else if (XPGWifiSDK.sharedInstance() == null) {
@@ -414,10 +410,9 @@ public class gwsdkwrapper extends CordovaPlugin {
 
 
     private void dealloc() {
-        if (XPGWifiSDK.sharedInstance() != null) {
-            XPGWifiSDK.sharedInstance().setListener(null);
-            _currentDeviceMac = null;
-        }
+        XPGWifiSDK.sharedInstance().setListener(null);
+        XPGWifiSDK.sharedInstance().setListener(wifiSDKListener);
+        _currentDeviceMac = null;
     }
 }
 

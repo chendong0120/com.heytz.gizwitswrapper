@@ -3,7 +3,7 @@
 #import <Cordova/CDV.h>
 #import <XPGWifiSDK/XPGWifiSDK.h>
 
-@interface gwsdkwrapper : CDVPlugin<XPGWifiDeviceDelegate,XPGWifiSDKDelegate> {
+@interface gwsdk : CDVPlugin<XPGWifiDeviceDelegate,XPGWifiSDKDelegate> {
     
     // Member variables go here.
     NSString * _appId;
@@ -17,7 +17,7 @@
 
 @end
 
-@implementation gwsdkwrapper
+@implementation gwsdk
 
 @synthesize commandHolder;
 NSString * productKey;
