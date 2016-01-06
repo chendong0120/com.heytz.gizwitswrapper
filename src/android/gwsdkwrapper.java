@@ -178,7 +178,7 @@ public class gwsdkwrapper extends CordovaPlugin {
             _appId = args.getString(0);
             XPGWifiSDK.sharedInstance().startWithAppID(context, _appId);
             if (debug) {
-                XPGWifiSDK.sharedInstance().setLogLevel(XPGWifiSDK.GizLogPrintLevel.GizLogPrintAll, false);
+            //    XPGWifiSDK.sharedInstance().setLogLevel(XPGWifiSDK.GizLogPrintLevel.GizLogPrintAll, false);
             }
             // set listener
             XPGWifiSDK.sharedInstance().setListener(wifiSDKListener);
