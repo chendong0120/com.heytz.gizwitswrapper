@@ -4,13 +4,8 @@
 #import <XPGWifiSDK/XPGWifiSDK.h>
 
 @interface gwsdk : CDVPlugin<XPGWifiDeviceDelegate,XPGWifiSDKDelegate> {
-    
     // Member variables go here.
-    NSString * _appId,*_uid,*_token,*_mac;
-    NSMutableDictionary *_controlObject;
-    XPGWifiSDK * _shareInstance;
-     BOOL isDiscoverLock;
-   }
+}
 
 -(void)setDeviceWifi:(CDVInvokedUrlCommand *)command;
 -(void)getDeviceList:(CDVInvokedUrlCommand *)command;
@@ -26,10 +21,15 @@
 
 @synthesize commandHolder;
 @synthesize _deviceList;
+
 NSString * productKey;
 NSString    *_currentPairDeviceMacAddress;
 NSInteger currentState;
 bool      _debug=true;
+NSString * _appId,*_uid,*_token,*_mac;
+NSMutableDictionary *_controlObject;
+XPGWifiSDK * _shareInstance;
+BOOL isDiscoverLock;
 
 //操作状态的枚举
 typedef NS_ENUM(NSInteger, GwsdkStateCode) {
@@ -77,13 +77,9 @@ typedef NS_ENUM(NSInteger, GwsdkStateCode) {
      @see 对应的回调接口：[XPGWifiSDKDelegate XPGWifiSDK:didSetDeviceWifi:result:]
      */
     //新接口 11.24
-
+    NSLog(@"ssid:@s,pwd:@s",command.arguments[2],command.arguments[3]);
     [[XPGWifiSDK  sharedInstance] setDeviceWifi:command.arguments[2] key:command.arguments[3] mode:XPGWifiSDKAirLinkMode softAPSSIDPrefix:nil timeout:180 wifiGAgentType:nil];
 }
-
-
-
-
 
 /**
  * @brief 回调接口，返回发现设备的结果
@@ -97,11 +93,10 @@ typedef NS_ENUM(NSInteger, GwsdkStateCode) {
     currentState=GetDevcieListCode;
 
     isDiscoverLock = true;
-    [[XPGWifiSDK sharedInstance] getBoundDevicesWithUid:command.arguments[3] token:command.arguments[1] specialProductKeys:command.arguments[2], nil];
+    [[XPGWifiSDK sharedInstance] getBoundDevicesWithUid:command.arguments[3] token:command.arguments[4] specialProductKeys:command.arguments[1], nil];
 }
 
-
--(void) deviceControl:(CDVInvokedUrlCommand *)command{
+-(void)deviceControl:(CDVInvokedUrlCommand *)command{
 
     productKey=command.arguments[1];
     _uid=command.arguments[2];
@@ -109,7 +104,7 @@ typedef NS_ENUM(NSInteger, GwsdkStateCode) {
     _mac=command.arguments[4];
     _controlObject=command.arguments[5];//todo: back to value:5
     isDiscoverLock=true;
-
+    currentState=ControlCode;
     [self init:command];//初始化设置appid
 
     /**
@@ -119,7 +114,7 @@ typedef NS_ENUM(NSInteger, GwsdkStateCode) {
      * @param specialProductKey：指定待筛选设备的产品标识（获取或搜索到未指定设备产品标识的设备将其过滤，指定Nil则不过滤）
      * @see 对应的回调接口：[XPGWifiSDK XPGWifiSDK:didDiscovered:result:]
      */
-    [[XPGWifiSDK sharedInstance] getBoundDevicesWithUid:_uid token:_token specialProductKeys:productKey,nil];
+    [[XPGWifiSDK sharedInstance] getBoundDevicesWithUid:_uid token:_token specialProductKeys:nil,nil];
 }
 
 /*!
@@ -210,48 +205,48 @@ typedef NS_ENUM(NSInteger, GwsdkStateCode) {
 
 
                 if(result == XPGWifiError_NONE  && [device macAddress].length > 0) {
-                    if (_debug) {
-                    NSDictionary *d = [NSDictionary dictionaryWithObjectsAndKeys:
-                                       device.did, @"did",
-                                       device.ipAddress, @"ipAddress",
-                                       [device macAddress], @"macAddress",
-                                       device.passcode, @"passcode",
-                                       device.productKey, @"productKey",
-                                       device.productName, @"productName",
-                                       device.remark, @"remark",
-                                       device.isConnected, @"isConnected",
-                                       device.isDisabled, @"isDisabled",
-                                       device.isLAN, @"isLAN",
-                                       device.isOnline, @"isOnline",
-                                       @"",@"error",
-                                       nil];
-                    for (NSString *key in d) {
-                        NSLog(@"=======success [device macAddress] key: %@ value: %@", key, d[key]);
-                    }
-                    }
+//                    if (_debug) {
+//                    NSDictionary *d = [NSDictionary dictionaryWithObjectsAndKeys:
+//                                       device.did, @"did",
+//                                       device.ipAddress, @"ipAddress",
+//                                       [device macAddress], @"macAddress",
+//                                       device.passcode, @"passcode",
+//                                       device.productKey, @"productKey",
+//                                       device.productName, @"productName",
+//                                       device.remark, @"remark",
+//                                       device.isConnected, @"isConnected",
+//                                       device.isDisabled, @"isDisabled",
+//                                       device.isLAN, @"isLAN",
+//                                       device.isOnline, @"isOnline",
+//                                       @"",@"error",
+//                                       nil];
+//                    for (NSString *key in d) {
+//                        NSLog(@"=======success [device macAddress] key: %@ value: %@", key, d[key]);
+//                    }
+//                    }
                     _currentPairDeviceMacAddress=device.macAddress;
 
                 }else if(result == XPGWifiError_NONE  && device.macAddress.length > 0) {
-                    if (_debug) {
-
-                    NSDictionary *d = [NSDictionary dictionaryWithObjectsAndKeys:
-                                       device.did, @"did",
-                                       device.ipAddress, @"ipAddress",
-                                       device.macAddress, @"macAddress",
-                                       device.passcode, @"passcode",
-                                       device.productKey, @"productKey",
-                                       device.productName, @"productName",
-                                       device.remark, @"remark",
-                                       device.isConnected, @"isConnected",
-                                       device.isDisabled, @"isDisabled",
-                                       device.isLAN, @"isLAN",
-                                       device.isOnline, @"isOnline",
-                                       @"",@"error",
-                                       nil];
-                    for (NSString *key in d) {
-                        NSLog(@"=======success device.macAddress key: %@ value: %@", key, d[key]);
-                    }
-                    }
+//                    if (_debug) {
+//
+//                    NSDictionary *d = [NSDictionary dictionaryWithObjectsAndKeys:
+//                                       device.did, @"did",
+//                                       device.ipAddress, @"ipAddress",
+//                                       device.macAddress, @"macAddress",
+//                                       device.passcode, @"passcode",
+//                                       device.productKey, @"productKey",
+//                                       device.productName, @"productName",
+//                                       device.remark, @"remark",
+//                                       device.isConnected, @"isConnected",
+//                                       device.isDisabled, @"isDisabled",
+//                                       device.isLAN, @"isLAN",
+//                                       device.isOnline, @"isOnline",
+//                                       @"",@"error",
+//                                       nil];
+//                    for (NSString *key in d) {
+//                        NSLog(@"=======success device.macAddress key: %@ value: %@", key, d[key]);
+//                    }
+//                    }
                     _currentPairDeviceMacAddress=device.macAddress;
 
                 }else if(result == XPGWifiError_CONFIGURE_TIMEOUT){
@@ -405,17 +400,17 @@ typedef NS_ENUM(NSInteger, GwsdkStateCode) {
 - (void)dealloc:(CDVInvokedUrlCommand *)command
 {
     NSLog(@"//====dealloc...====");
-//    _shareInstance = nil;
     _currentPairDeviceMacAddress=nil;
-//     _shareInstance.delegate = nil;
+    [XPGWifiSDK sharedInstance].delegate=nil;
+    [XPGWifiSDK sharedInstance].delegate=self;
 }
 
 
 - (void)dispose{
     NSLog(@"//====disposed...====");
-//    _shareInstance=nil;
     _currentPairDeviceMacAddress=nil;
-//     _shareInstance.delegate = nil;
+    [XPGWifiSDK sharedInstance].delegate=nil;
+    [XPGWifiSDK sharedInstance].delegate=self;
 }
 
 @end
