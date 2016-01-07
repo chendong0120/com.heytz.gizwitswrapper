@@ -12,7 +12,9 @@
      BOOL isDiscoverLock;
    }
 
-- (void)setDeviceWifi:(CDVInvokedUrlCommand *)command;
+-(void)setDeviceWifi:(CDVInvokedUrlCommand *)command;
+-(void)getDeviceList:(CDVInvokedUrlCommand *)command;
+-(void)deviceControl:(CDVInvokedUrlCommand *)command;
 -(void)dealloc:(CDVInvokedUrlCommand *)command;
 
 @property (strong,nonatomic) CDVInvokedUrlCommand * commandHolder;
